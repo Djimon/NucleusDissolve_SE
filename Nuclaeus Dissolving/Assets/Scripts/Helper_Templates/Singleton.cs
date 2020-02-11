@@ -2,27 +2,57 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Singleton<T> : MonoBehaviour where T : MonoBehaviour
+public enum SingletonDestroyMode
 {
-    protected static T instance;
+    GameObject,
+    Script,
+    Nothing,
+    Custom
+}
 
-    //Returns the instance of this singleton.
-    public static T Instance
+public abstract class Singleton<T> : MonoBehaviour where T : class
+{
+    public static T Instance { get; protected set; }
+
+    [SerializeField]
+    private SingletonDestroyMode _destroyMode;
+
+    [SerializeField]
+    private bool _dontDestroyOnLoad;  
+    
+    protected abstract void OnAwake();
+
+    private void Awake()
     {
-        get
+        if (Instance != null)
         {
-            if (instance == null)
+            if (_destroyMode == SingletonDestroyMode.Custom)
+                OnCustomDestroyMode(Instance, this as T);
+
+            else if (_destroyMode == SingletonDestroyMode.GameObject)
+                Destroy(gameObject);
+
+            else if (_destroyMode == SingletonDestroyMode.Script)
+                Destroy(this);
+
+            else
             {
-                instance = (T)FindObjectOfType(typeof(T));
-
-                if (instance == null)
-                {
-                    Debug.LogError("An instance of " + typeof(T) +
-                       " is needed in the scene, but there is none.");
-                }
+                //Debug.Log("Multiple instances of " + gameObject.name + " detected. Intended?!");
             }
-
-            return instance;
         }
+
+        else
+        {
+            if (_dontDestroyOnLoad)
+                DontDestroyOnLoad(gameObject);
+
+            Instance = this as T;
+            OnAwake();
+        }
+    }
+
+    protected virtual void OnCustomDestroyMode(T oldInstance, T newInstance)
+    {
+
     }
 }

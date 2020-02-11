@@ -75,4 +75,9 @@ using UnityEngine;
 		{
 			currentValue = value;
 		}
-	}
+
+    public static implicit operator ObservedValue<T>(int v)
+    {
+        throw new NotImplementedException();
+    }
+}
